@@ -151,4 +151,4 @@ def BishopPathClear(fromRow,fromColumn,toRow,toColumn):
 
 
 def QueenPathClear(fromRow,fromColumn,toRow,toColumn):
-	return BishopPathClear(fromRow,fromColumn,toRow,toColumn) and RookPathClear(fromRow,fromColumn,toRow,toColumn) #Rook + Bishop = Queen
+	return BishopPathClear(fromRow,fromColumn,toRow,toColumn) or RookPathClear(fromRow,fromColumn,toRow,toColumn) #Rook + Bishop = Queen

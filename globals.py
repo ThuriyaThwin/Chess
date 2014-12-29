@@ -9,7 +9,7 @@ PieceSelected = None
 PieceSelectedRow = None
 PieceSelectedColumn = None
 TURN = None
-
+AI_on = None
 #ChessGrid values
 # 1_ - white , 2_ - black
 # _1 - pawn , _2 - rook , _3 - bishop , _4 - knight , _5 - queen , _6 - king
@@ -18,7 +18,8 @@ TURN = None
 # 21 => black pawn
 
 def init():
-	global root,ImageDict,ChessGrid,ChessPieces,PieceSelected,PieceSelectedRow,PieceSelectedColumn,TURN
+	global root,ImageDict,ChessGrid,ChessPieces,PieceSelected,PieceSelectedRow,PieceSelectedColumn,TURN,AI_on
+	AI_on = False
 	root = None
 	ImageDict = {}
 	ChessGrid = []

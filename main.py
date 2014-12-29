@@ -2,8 +2,7 @@
 from Tkinter import *
 import globals
 import validmove
-
-
+import ai
 
 class MainWindow(Frame):
 
@@ -175,9 +174,14 @@ class MainWindow(Frame):
 			return
 
 		if(globals.TURN == 1):
-			globals.TURN = 2
+			if(globals.AI_on):
+				AI_Move()
+			else:
+				globals.TURN = 2
+
 		else:
 			globals.TURN = 1
+
 		PieceSelected = False
 
 
