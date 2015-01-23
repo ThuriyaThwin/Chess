@@ -77,21 +77,33 @@ def validMove(fromRow,fromColumn,toRow,toColumn,Piece):
 		return True	
 
 	#WhiteQueen
-	if( Piece == "15" and ( (abs(toRow - fromRow) == abs(toColumn - fromColumn)) or (toRow == fromRow) or (toColumn == fromColumn) )):
-		if(QueenPathClear(fromRow,fromColumn,toRow,toColumn)):
-			globals.ChessGrid[toRow][toColumn] = "15"
-			globals.ChessGrid[fromRow][fromColumn] = "0"
+	if( Piece == "15"):
+		if((abs(toRow - fromRow) == abs(toColumn - fromColumn))):
+			if(BishopPathClear(fromRow,fromColumn,toRow,toColumn)):
+				globals.ChessGrid[toRow][toColumn] = "15"
+				globals.ChessGrid[fromRow][fromColumn] = "0"
+				return True
+		if(( (toRow == fromRow) or (toColumn == fromColumn) )):
+			if(RookPathClear(fromRow,fromColumn,toRow,toColumn)):
+				globals.ChessGrid[toRow][toColumn] = "15"
+				globals.ChessGrid[fromRow][fromColumn] = "0"
 			return True	
 		return False
 
 	#BlackQueen	
-	if( Piece == "25" and ( (abs(toRow - fromRow) == abs(toColumn - fromColumn)) or (toRow == fromRow) or (toColumn == fromColumn) )):
-		if(QueenPathClear(fromRow,fromColumn,toRow,toColumn)):
-			globals.ChessGrid[toRow][toColumn] = "25"
-			globals.ChessGrid[fromRow][fromColumn] = "0"
+	if( Piece == "25"):
+		if((abs(toRow - fromRow) == abs(toColumn - fromColumn))):
+			if(BishopPathClear(fromRow,fromColumn,toRow,toColumn)):
+				globals.ChessGrid[toRow][toColumn] = "25"
+				globals.ChessGrid[fromRow][fromColumn] = "0"
+				return True
+		if(( (toRow == fromRow) or (toColumn == fromColumn) )):
+			if(RookPathClear(fromRow,fromColumn,toRow,toColumn)):
+				globals.ChessGrid[toRow][toColumn] = "25"
+				globals.ChessGrid[fromRow][fromColumn] = "0"
 			return True	
 		return False
-
+	
 	#WhiteKing
 	if( Piece == "16" and ( (abs(toRow - fromRow) <=1) and (abs(toColumn - fromColumn) <= 1)  )):
 		globals.ChessGrid[toRow][toColumn] = "16"
@@ -127,12 +139,12 @@ def RookPathClear(fromRow,fromColumn,toRow,toColumn):
 
 def BishopPathClear(fromRow,fromColumn,toRow,toColumn):
 	
-	if(fromRow < toRow):	#if to locations is above
-		rowInc = 1 			#row index will be incremented
-		row = fromRow + 1 	
+	if(fromRow > toRow):	#if to locations is above
+		rowInc = -1 			#row index will be incremented
+		row = fromRow - 1 	
 	else:
-		rowInc = -1 		#row index will be decremented
-		row = fromRow - 1 
+		rowInc = 1 		#row index will be decremented
+		row = fromRow + 1 
 
 	if(fromColumn < toColumn): #if to location is to the right
 		colInc = 1 			   #col index will be incremented	
@@ -148,7 +160,3 @@ def BishopPathClear(fromRow,fromColumn,toRow,toColumn):
 		col += colInc
 
 	return True
-
-
-def QueenPathClear(fromRow,fromColumn,toRow,toColumn):
-	return BishopPathClear(fromRow,fromColumn,toRow,toColumn) or RookPathClear(fromRow,fromColumn,toRow,toColumn) #Rook + Bishop = Queen

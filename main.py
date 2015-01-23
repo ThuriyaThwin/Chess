@@ -3,6 +3,18 @@ from Tkinter import *
 import globals
 import validmove
 import ai
+from random import randint
+from copy import deepcopy
+
+
+#uncomment for logging to file
+#old_stdout = sys.stdout
+#log_file = open("message.log","w")
+#sys.stdout = log_file
+
+#TODO
+#ai sucks
+#add checkmate
 
 class MainWindow(Frame):
 
@@ -11,6 +23,7 @@ class MainWindow(Frame):
 		self.parent = parent
 		self.init()
 
+	#initialize the GUI frames and grids
 	def init(self):
 
 		self.MenuBar = Frame(self.parent,background="blue")
@@ -21,8 +34,6 @@ class MainWindow(Frame):
 
 		self.BlackPiecesFrame = Frame(self.parent,background="red")
 		self.BlackPiecesFrame.pack()
-
-		# Label(self.BlackPiecesFrame,text="Black killed pieces here..").pack()
 		
 		self.ChessGridFrame = Frame(self.parent,background="pink")
 		self.ChessGridFrame.pack()
@@ -32,8 +43,9 @@ class MainWindow(Frame):
 		self.WhitePiecesFrame = Frame(self.parent,background="red")
 		self.WhitePiecesFrame.pack()
 		
-		# Label(self.WhitePiecesFrame,text="White killed pieces here..").pack()
+		
 
+	#create initial chess grid configuration
 	def CreateGrid(self):
 		
 		self.ChessCells = []
@@ -108,6 +120,7 @@ class MainWindow(Frame):
 					self.ChessCells[i][j].grid(row=i,column=j)					
 					
 
+		#chess grid background 1-gray/black 0-white
 		a = "10101010"
 		b = "01010101"
 		for i in range(0,8):
@@ -122,6 +135,7 @@ class MainWindow(Frame):
 					self.ChessCells[i][j].configure(background="white")
 
 
+	#check if selected cell has a valid piece in it according to player and store row and column indices
 	def CellSelect(self,row,column):
 		
 		if(globals.TURN == 1 and globals.ChessGrid[row][column][0] == '1' and globals.ChessGrid[row][column] in globals.ChessPieces):
@@ -132,76 +146,126 @@ class MainWindow(Frame):
 			globals.PieceSelected = True
 			globals.PieceSelectedRow = row
 			globals.PieceSelectedColumn = column
-		elif(globals.PieceSelected):
-			self.MovePiece(row,column,globals.ChessGrid[globals.PieceSelectedRow][globals.PieceSelectedColumn])
+		elif(globals.PieceSelected): #move to selected cell if a piece to move has already been selected in previous click
+			self.MovePiece(row,column,globals.PieceSelectedRow,globals.PieceSelectedColumn,globals.ChessGrid[globals.PieceSelectedRow][globals.PieceSelectedColumn])
 
 
-	def MovePiece(self,toRow,toColumn,Piece):
+	#confirm valid move and move piece from (PieceSelectedRow,PieceSelectedColumn) -> (toRow,toColumn)
+	def MovePiece(self,toRow,toColumn,fromRow,fromCol,Piece):
 
 		print("move "+Piece+" from "+str(globals.PieceSelectedRow)+","+str(globals.PieceSelectedColumn)+" to "+str(toRow)+","+str(toColumn))
 		
+		#if move is valid create new image at new location
 		if(validmove.validMove(globals.PieceSelectedRow,globals.PieceSelectedColumn,toRow,toColumn,Piece)):
-			
-			if(Piece == "11"):
-				self.ChessCells[toRow][toColumn].configure(image = globals.ImageDict["WhitePawn"])
-			elif(Piece == "12"):
-				self.ChessCells[toRow][toColumn].configure(image = globals.ImageDict["WhiteRook"])
-			elif(Piece == "13"):
-				self.ChessCells[toRow][toColumn].configure(image = globals.ImageDict["WhiteBishop"])
-			elif(Piece == "14"):
-				self.ChessCells[toRow][toColumn].configure(image = globals.ImageDict["WhiteKnight"])
-			elif(Piece == "15"):
-				self.ChessCells[toRow][toColumn].configure(image = globals.ImageDict["WhiteQueen"])
-			elif(Piece == "16"):
-				self.ChessCells[toRow][toColumn].configure(image = globals.ImageDict["WhiteKing"])
-			elif(Piece == "21"):
-				self.ChessCells[toRow][toColumn].configure(image = globals.ImageDict["BlackPawn"])
-			elif(Piece == "22"):
-				self.ChessCells[toRow][toColumn].configure(image = globals.ImageDict["BlackRook"])
-			elif(Piece == "23"):
-				self.ChessCells[toRow][toColumn].configure(image = globals.ImageDict["BlackBishop"])
-			elif(Piece == "24"):
-				self.ChessCells[toRow][toColumn].configure(image = globals.ImageDict["BlackKnight"])
-			elif(Piece == "25"):
-				self.ChessCells[toRow][toColumn].configure(image = globals.ImageDict["BlackQueen"])
-			elif(Piece == "26"):
-				self.ChessCells[toRow][toColumn].configure(image = globals.ImageDict["BlackKing"])
-			
-			self.ChessCells[globals.PieceSelectedRow][globals.PieceSelectedColumn].configure(image=globals.ImageDict["Transparent"])	
-
+			self.CreateImage(toRow,toColumn,globals.PieceSelectedRow,globals.PieceSelectedColumn,Piece)
 		else:
 			print("invalid move")
 			return
 
+		#change turn of player 1 to 2 or to AI 
 		if(globals.TURN == 1):
+			
 			if(globals.AI_on):
-				AI_Move()
+				moves = []
+				heuristic = 0
+				makeMove = [0,0,0,0] #[fromRow,fromCol,toRow,toCol]
+				noMove = True
+				for i in range(0,8):
+					for j in range(0,8):
+
+						if(globals.ChessGrid[i][j][0] == "2"):
+
+							print("main.py - Getting moves for "+globals.ChessGrid[i][j]+' at '+str(i)+','+str(j))
+							moves = ai.getAllMoves(globals.ChessGrid,i,j,globals.ChessGrid[i][j][1],globals.ChessGrid[i][j][0])
+							print("moves are :")
+							print(moves)
+							print()
+							for move in moves:
+
+								print("playing move "+str(move))
+								NewChessGrid = deepcopy(globals.ChessGrid)
+								NewChessGrid[move[0]][move[1]] = globals.ChessGrid[i][j]
+								NewChessGrid[i][j] = "0"
+								moveHeuristic = ai.AI_Move(NewChessGrid)
+								print("back to main.py moveHeuristic = "+str(moveHeuristic) + " checking "+globals.ChessGrid[i][j])
+								ai.AI_Move.depth = 0
+								#if heuristic is same chose generated move by a chance
+								if(moveHeuristic == heuristic):
+									xyz = randint(1,100)
+									if(xyz > 50):
+										moveHeuristic = heuristic
+										makeMove = [i,j,move[0],move[1]]
+								#if better heuristic from move choose this move
+								if(moveHeuristic < heuristic or (move == [0,0,0,0])):
+									moveHeuristic = heuristic
+									makeMove = [i,j,move[0],move[1]]
+								if(noMove):
+									moveHeuristic = heuristic
+									makeMove = [i,j,move[0],move[1]]
+									noMove = False
+
+				globals.ChessGrid[makeMove[2]][makeMove[3]] = globals.ChessGrid[makeMove[0]][makeMove[1]]
+				globals.ChessGrid[makeMove[0]][makeMove[1]] = "0"
+				#globals.PrintGrid(globals.ChessGrid)
+				self.CreateImage(makeMove[2],makeMove[3],makeMove[0],makeMove[1],globals.ChessGrid[makeMove[2]][makeMove[3]])				
+
 			else:
 				globals.TURN = 2
-
 		else:
 			globals.TURN = 1
 
 		PieceSelected = False
 
+	def CreateImage(self,toRow,toColumn,fromRow,fromColumn,Piece):
+		print('=================================================')
+		print("moving "+str(Piece)+" from "+str(fromRow)+','+str(fromColumn)+" to "+str(toRow)+','+str(toColumn))
+		print('=================================================')
+		if(Piece == "11"):
+			self.ChessCells[toRow][toColumn].configure(image = globals.ImageDict["WhitePawn"])
+		elif(Piece == "12"):
+			self.ChessCells[toRow][toColumn].configure(image = globals.ImageDict["WhiteRook"])
+		elif(Piece == "13"):
+			self.ChessCells[toRow][toColumn].configure(image = globals.ImageDict["WhiteBishop"])
+		elif(Piece == "14"):
+			self.ChessCells[toRow][toColumn].configure(image = globals.ImageDict["WhiteKnight"])
+		elif(Piece == "15"):
+			self.ChessCells[toRow][toColumn].configure(image = globals.ImageDict["WhiteQueen"])
+		elif(Piece == "16"):
+			self.ChessCells[toRow][toColumn].configure(image = globals.ImageDict["WhiteKing"])
+		elif(Piece == "21"):
+			self.ChessCells[toRow][toColumn].configure(image = globals.ImageDict["BlackPawn"])
+		elif(Piece == "22"):
+			self.ChessCells[toRow][toColumn].configure(image = globals.ImageDict["BlackRook"])
+		elif(Piece == "23"):
+			self.ChessCells[toRow][toColumn].configure(image = globals.ImageDict["BlackBishop"])
+		elif(Piece == "24"):
+			self.ChessCells[toRow][toColumn].configure(image = globals.ImageDict["BlackKnight"])
+		elif(Piece == "25"):
+			self.ChessCells[toRow][toColumn].configure(image = globals.ImageDict["BlackQueen"])
+		elif(Piece == "26"):
+			self.ChessCells[toRow][toColumn].configure(image = globals.ImageDict["BlackKing"])
+		
+		#remove image at old location
+		self.ChessCells[fromRow][fromColumn].configure(image=globals.ImageDict["Transparent"])	
 
+#initialize Image dictionary objects
 def InitializePictures():
-	
-	globals.ImageDict["BlackPawn"] = PhotoImage(file="img/black-pawn.png",width="60",height="60")
-	globals.ImageDict["WhitePawn"] = PhotoImage(file="img/white-pawn.png",width="60",height="60")
-	globals.ImageDict["BlackBishop"] = PhotoImage(file="img/black-bishop.png",width="60",height="60")
-	globals.ImageDict["WhiteBishop"] = PhotoImage(file="img/white-bishop.png",width="60",height="60")
-	globals.ImageDict["BlackQueen"] = PhotoImage(file="img/black-queen.png",width="60",height="60")
-	globals.ImageDict["WhiteQueen"] = PhotoImage(file="img/white-queen.png",width="60",height="60")
-	globals.ImageDict["BlackKing"] = PhotoImage(file="img/black-king.png",width="60",height="60")
-	globals.ImageDict["WhiteKing"] = PhotoImage(file="img/white-king.png",width="60",height="60")
-	globals.ImageDict["BlackRook"] = PhotoImage(file="img/black-rook.png",width="60",height="60")
-	globals.ImageDict["WhiteRook"] = PhotoImage(file="img/white-rook.png",width="60",height="60")
-	globals.ImageDict["BlackKnight"] = PhotoImage(file="img/black-knight.png",width="60",height="60")
-	globals.ImageDict["WhiteKnight"] = PhotoImage(file="img/white-knight.png",width="60",height="60")
-	globals.ImageDict["WhiteBlank"] = PhotoImage(file="img/white-blank.png",width="60",height="60")
-	globals.ImageDict["GrayBlank"] = PhotoImage(file="img/gray-blank.png",width="60",height="60")
-	globals.ImageDict["Transparent"] = PhotoImage(file="img/transparent.png",width="60",height="60")
+	path = "img/"
+	globals.ImageDict["BlackPawn"] = PhotoImage(file=path+"black-pawn.png",width="60",height="60")
+	globals.ImageDict["WhitePawn"] = PhotoImage(file=path+"white-pawn.png",width="60",height="60")
+	globals.ImageDict["BlackBishop"] = PhotoImage(file=path+"black-bishop.png",width="60",height="60")
+	globals.ImageDict["WhiteBishop"] = PhotoImage(file=path+"white-bishop.png",width="60",height="60")
+	globals.ImageDict["BlackQueen"] = PhotoImage(file=path+"black-queen.png",width="60",height="60")
+	globals.ImageDict["WhiteQueen"] = PhotoImage(file=path+"white-queen.png",width="60",height="60")
+	globals.ImageDict["BlackKing"] = PhotoImage(file=path+"black-king.png",width="60",height="60")
+	globals.ImageDict["WhiteKing"] = PhotoImage(file=path+"white-king.png",width="60",height="60")
+	globals.ImageDict["BlackRook"] = PhotoImage(file=path+"black-rook.png",width="60",height="60")
+	globals.ImageDict["WhiteRook"] = PhotoImage(file=path+"white-rook.png",width="60",height="60")
+	globals.ImageDict["BlackKnight"] = PhotoImage(file=path+"black-knight.png",width="60",height="60")
+	globals.ImageDict["WhiteKnight"] = PhotoImage(file=path+"white-knight.png",width="60",height="60")
+	globals.ImageDict["WhiteBlank"] = PhotoImage(file=path+"white-blank.png",width="60",height="60")
+	globals.ImageDict["GrayBlank"] = PhotoImage(file=path+"gray-blank.png",width="60",height="60")
+	globals.ImageDict["Transparent"] = PhotoImage(file=path+"transparent.png",width="60",height="60")
 
 def main():
 	
