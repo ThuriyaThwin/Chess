@@ -8,7 +8,8 @@ def AI_Move(GameGrid):
 	ChessGrid = deepcopy(GameGrid)
 	
 
-	#static variable to keep track of depth of recursio
+	#static variable to keep track of depth of recursion
+	#increment by 1 if not yet set else set to 1
 	try:
 		AI_Move.depth += 1
 		print("AI_move.depth = "+str(AI_Move.depth))
@@ -16,10 +17,12 @@ def AI_Move(GameGrid):
 		AI_Move.depth = 1
 		print("setting AI_move.depth = "+str(AI_Move.depth))
 
+	#if max depth for recursion is reached then return
 	if(AI_Move.depth >= globals.MAX_DEPTH):
 		tempVal = getHeuristic(ChessGrid)
 		print("returning "+str(tempVal) + " depth = "+str(AI_Move.depth)+"/"+str(globals.MAX_DEPTH))
 		return tempVal
+
 
 	if(AI_Move.depth % 2 == 0):
 		print("AI TURN")
@@ -42,23 +45,31 @@ def AI_Move(GameGrid):
 
 			if(ChessGrid[i][j][0] == turn ): #1 - AI .. 2 - human
 				
-				#if the piece belongs to the computer get a list of all possible moves
-				#the piece can make
+				#get list of moves the piece can make
 				print("ai.py - Getting moves for "+globals.ChessGrid[i][j] + " location : "+str(i)+","+str(j))
 				moves = getAllMoves(ChessGrid,i,j,ChessGrid[i][j][1],ChessGrid[i][j][0])
 				print("moves are :")
 				print(moves)
 				print()
+
+				#for every possible move
 				for move in moves:
 					
+
+					#copy grid status to new list
 					print("playing move "+str(move))
 					NewChessGrid = deepcopy(ChessGrid)
 					NewChessGrid[i][j] = "0"
 					NewChessGrid[move[0]][move[1]] = ChessGrid[i][j]
 					#print("New Grid :")
 					#PrintGrid(NewChessGrid)
+
+					#perform MINIMAX/ALPHA-BETA
 					moveHeuristic = AI_Move(NewChessGrid)
+
+					#reduce depth value when returning from recursion
 					AI_Move.depth -= 1
+
 					print("back checking "+ChessGrid[i][j] + " depth = "+str(AI_Move.depth))
 					#if heuristic is same chose generated move by a chance
 					if(moveHeuristic == heuristic):
@@ -66,7 +77,11 @@ def AI_Move(GameGrid):
 						if(xyz > 50):
 							moveHeuristic = heuristic
 							makeMove = [i,j,move[0],move[1]]
+
 					#if better heuristic from move choose this move
+					#turn values AI - 1, HUMAN - 2
+					#AI will choose a larger heuristic value (MAX)
+					#human will choose a lower heuristic value (MIN)
 					if(moveHeuristic > heuristic and turn == "1"):
 						heuristic = moveHeuristic 
 					if(moveHeuristic < heuristic and turn == "2"):
@@ -83,6 +98,7 @@ def getHeuristic(ChessGrid):
 	blackVal = 0
 	for i in range(0,8):
 		for j in range(0,8):
+
 			#empty
 			if(ChessGrid[i][j] == "0"):
 				continue
@@ -130,14 +146,16 @@ def getHeuristic(ChessGrid):
 
 
 #check's if the location is empty or occupied by enemy
-def CheckMove(ChessGrid,row,col,color):
+def CheckCell(ChessGrid,row,col,color):
 
 	if(row < 0 or col < 0 or row > 7 or col > 7):
 		return False
 
 	try:
+		#if cell is empty or occupied by opponent
 		if(ChessGrid[row][col][0]  == "0" or ChessGrid[row][col][0] != color):
 			return True
+		#else space is occupied by own piece
 		return False
 	except IndexError: #catch IndexError
 		return False
@@ -149,8 +167,10 @@ def getAllMoves(ChessGrid,row,col,piece,color):
 
 	#Pawn
 	if(piece == "1"):
-		
-		if(color == "2"):
+
+		#separate if else for black and white since black pawns will only go downwards
+		#and white pawns only upwards
+		if(color == "2"):  #black
 			#moving a step
 			if( ChessGrid[row+1][col] == "0" ):
 				moves.append([row+1,col])
@@ -159,9 +179,11 @@ def getAllMoves(ChessGrid,row,col,piece,color):
 				moves.append([row+1,col+1])
 			if( row+1 < 8 and col - 1 > 0 and ChessGrid[row+1][col-1][0] == "1" ):
 				moves.append([row+1,col-1])
-		else:
+		else: #white
+			#moving a step
 			if( ChessGrid[row-1][col] == "0" ):
 				moves.append([row-1,col])
+			#attacking
 			if( row+1 < 8 and col + 1 < 8 and ChessGrid[row-1][col+1][0] == "2" ):
 				moves.append([row-1,col+1])
 			if( row+1 < 8 and col - 1 > 0 and ChessGrid[row-1][col-1][0] == "2" ):
@@ -169,18 +191,22 @@ def getAllMoves(ChessGrid,row,col,piece,color):
 
 
 	#Rook or Queen
+	#Queen can move up/down/left/right like a Rook
 	if(piece == "2" or piece == "5"):
 
 		#going down
 		i = row + 1
 		while (i<=7):
+			#empty square in path
 			if(ChessGrid[i][col][0] == "0"):
 				moves.append([i,col])
 
+			#opponent in path
 			elif(ChessGrid[i][col][0] != color):
 				moves.append([i,col])
 				break
 
+			#own piece in path
 			elif(ChessGrid[i][col][0] == color):
 				break
 			i+=1
@@ -229,17 +255,22 @@ def getAllMoves(ChessGrid,row,col,piece,color):
 			j+=1
 
 	#Bishop or Queen
+	#queen can move diagonally like the bishop
 	if(piece == "3" or piece == "5"):
 
 		#going up right
 		i = row - 1 
 		j = col + 1
 		while (i>=0 and j<=7):
+
+			#empty space in path
 			if(ChessGrid[i][j][0] == "0"):
 				moves.append([i,j])
+			#opponent in path
 			elif(ChessGrid[i][j][0] != color):
 				moves.append([i,j])
 				break
+			#own piece in path
 			elif(ChessGrid[i][j][0] == color):
 				break
 			i-=1
@@ -290,55 +321,55 @@ def getAllMoves(ChessGrid,row,col,piece,color):
 	#Knight
 	if(piece == "4"):
 
-		if(CheckMove(ChessGrid,row+2,col+1,color)):
+		if(CheckCell(ChessGrid,row+2,col+1,color)):
 			moves.append([row+2,col+1])
 
-		if(CheckMove(ChessGrid,row+2,col-1,color)):
+		if(CheckCell(ChessGrid,row+2,col-1,color)):
 			moves.append([row+2,col-1])
 
-		if(CheckMove(ChessGrid,row-2,col+1,color)):
+		if(CheckCell(ChessGrid,row-2,col+1,color)):
 			moves.append([row-2,col+1])
 
-		if(CheckMove(ChessGrid,row-2,col-1,color)):
+		if(CheckCell(ChessGrid,row-2,col-1,color)):
 			moves.append([row-2,col-1])
 
-		if(CheckMove(ChessGrid,row+1,col+2,color)):
+		if(CheckCell(ChessGrid,row+1,col+2,color)):
 			moves.append([row+1,col+2])
 
-		if(CheckMove(ChessGrid,row-1,col+2,color)):
+		if(CheckCell(ChessGrid,row-1,col+2,color)):
 			moves.append([row-1,col+2])
 
-		if(CheckMove(ChessGrid,row+1,col-2,color)):
+		if(CheckCell(ChessGrid,row+1,col-2,color)):
 			moves.append([row+1,col-2])
 
-		if(CheckMove(ChessGrid,row-1,col-2,color)):
+		if(CheckCell(ChessGrid,row-1,col-2,color)):
 			moves.append([row-1,col-2])
 
 	#King
 	if(piece == "6"):
 
-		if(CheckMove(ChessGrid,row+1,col,color)):
+		if(CheckCell(ChessGrid,row+1,col,color)):
 			moves.append([row+1,col])
 
-		if(CheckMove(ChessGrid,row+1,col+1,color)):
+		if(CheckCell(ChessGrid,row+1,col+1,color)):
 			moves.append([row+1,col+1])
 
-		if(CheckMove(ChessGrid,row+1,col-1,color)):
+		if(CheckCell(ChessGrid,row+1,col-1,color)):
 			moves.append([row+1,col-1])
 
-		if(CheckMove(ChessGrid,row,col-1,color)):
+		if(CheckCell(ChessGrid,row,col-1,color)):
 			moves.append([row,col-1])
 
-		if(CheckMove(ChessGrid,row,col+1,color)):
+		if(CheckCell(ChessGrid,row,col+1,color)):
 			moves.append([row,col+1])
 
-		if(CheckMove(ChessGrid,row+1,col-1,color)):
+		if(CheckCell(ChessGrid,row+1,col-1,color)):
 			moves.append([row+1,col-1])
 
-		if(CheckMove(ChessGrid,row+1,col,color)):
+		if(CheckCell(ChessGrid,row+1,col,color)):
 			moves.append([row+1,col])
 
-		if(CheckMove(ChessGrid,row+1,col+1,color)):
+		if(CheckCell(ChessGrid,row+1,col+1,color)):
 			moves.append([row+1,col+1])
 
 	return moves

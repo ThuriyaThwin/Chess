@@ -32,7 +32,7 @@ def init():
 	PieceSelectedRow = -1
 	PieceSelectedColumn = -1
 	TURN = 1 # 1 - white , 2 - black
-	MAX_DEPTH = 2
+	MAX_DEPTH = 3
 
 
 def PrintGrid(Grid):

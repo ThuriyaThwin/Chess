@@ -166,35 +166,49 @@ class MainWindow(Frame):
 		if(globals.TURN == 1):
 			
 			if(globals.AI_on):
-				moves = []
-				heuristic = 0
+				moves = [] #stores available moves for a piece
+				heuristic = 0 #stores heuristic of chosen move
 				makeMove = [0,0,0,0] #[fromRow,fromCol,toRow,toCol]
-				noMove = True
+				noMove = True #reason to use forgotten need time to remember
+
 				for i in range(0,8):
 					for j in range(0,8):
 
+						#if piece belongs to AI ( AI pieces are black)
 						if(globals.ChessGrid[i][j][0] == "2"):
 
+							#get moves of the piece
 							print("main.py - Getting moves for "+globals.ChessGrid[i][j]+' at '+str(i)+','+str(j))
 							moves = ai.getAllMoves(globals.ChessGrid,i,j,globals.ChessGrid[i][j][1],globals.ChessGrid[i][j][0])
 							print("moves are :")
 							print(moves)
 							print()
+
+							#for every possible move
 							for move in moves:
 
+								#copy the grid status to a new list
 								print("playing move "+str(move))
 								NewChessGrid = deepcopy(globals.ChessGrid)
+
+								#perform the move
 								NewChessGrid[move[0]][move[1]] = globals.ChessGrid[i][j]
 								NewChessGrid[i][j] = "0"
+
+								#perform MINIMAX/ALPHA-BETA
 								moveHeuristic = ai.AI_Move(NewChessGrid)
 								print("back to main.py moveHeuristic = "+str(moveHeuristic) + " checking "+globals.ChessGrid[i][j])
+
+								#set the static variable controlling depth of recursion of minimax to 0
 								ai.AI_Move.depth = 0
-								#if heuristic is same chose generated move by a chance
+
+								#if heuristic is same as previous then chose generated move by a chance
 								if(moveHeuristic == heuristic):
-									xyz = randint(1,100)
-									if(xyz > 50):
+									randomInt = randint(1,100)
+									if(randomInt > 50):
 										moveHeuristic = heuristic
 										makeMove = [i,j,move[0],move[1]]
+
 								#if better heuristic from move choose this move
 								if(moveHeuristic < heuristic or (move == [0,0,0,0])):
 									moveHeuristic = heuristic
@@ -220,6 +234,8 @@ class MainWindow(Frame):
 		print('=================================================')
 		print("moving "+str(Piece)+" from "+str(fromRow)+','+str(fromColumn)+" to "+str(toRow)+','+str(toColumn))
 		print('=================================================')
+
+		#create image at new location
 		if(Piece == "11"):
 			self.ChessCells[toRow][toColumn].configure(image = globals.ImageDict["WhitePawn"])
 		elif(Piece == "12"):
@@ -248,6 +264,7 @@ class MainWindow(Frame):
 		#remove image at old location
 		self.ChessCells[fromRow][fromColumn].configure(image=globals.ImageDict["Transparent"])	
 
+
 #initialize Image dictionary objects
 def InitializePictures():
 	path = "img/"
@@ -269,11 +286,15 @@ def InitializePictures():
 
 def main():
 	
+	#intialize global variables
 	globals.init()
 
 	root = Tk()
 	root.geometry("600x600+200+200")
+
+	#initialize image dictionary
 	InitializePictures()
+
 	game = MainWindow(root)
 	game.master.title("Chess")
 	root.mainloop()
