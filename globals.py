@@ -11,7 +11,7 @@ PieceSelectedColumn = None
 TURN = None
 AI_on = None
 MAX_DEPTH = None #max minimax depth
-
+KingChecked = None
 #ChessGrid values
 # 1_ - white , 2_ - black
 # _1 - pawn , _2 - rook , _3 - bishop , _4 - knight , _5 - queen , _6 - king

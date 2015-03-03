@@ -12,57 +12,66 @@ def AI_Move(GameGrid):
 	#increment by 1 if not yet set else set to 1
 	try:
 		AI_Move.depth += 1
-		print("AI_move.depth = "+str(AI_Move.depth))
+		# print("AI_move.depth = "+str(AI_Move.depth))
 	except AttributeError :
 		AI_Move.depth = 1
-		print("setting AI_move.depth = "+str(AI_Move.depth))
+		# print("setting AI_move.depth = "+str(AI_Move.depth))
 
 	#if max depth for recursion is reached then return
 	if(AI_Move.depth >= globals.MAX_DEPTH):
-		tempVal = getHeuristic(ChessGrid)
-		print("returning "+str(tempVal) + " depth = "+str(AI_Move.depth)+"/"+str(globals.MAX_DEPTH))
-		return tempVal
+		heuristic = getHeuristic(ChessGrid)
+		# print("returning "+str(heuristic) + " depth = "+str(AI_Move.depth)+"/"+str(globals.MAX_DEPTH))
+		return heuristic
 
 
 	if(AI_Move.depth % 2 == 0):
-		print("AI TURN")
+		# print("AI TURN")
 		turn = "2" #AI
 	else:
-		print("HUMAN TURN")
+		# print("HUMAN TURN")
 		turn = "1" #human
 
-	heuristic = 0
 
-	#if king checked
-	#TODO
-	pass
+	moves = [] #stores available moves for a piece
+	heuristic = getHeuristic(ChessGrid) #stores heuristic of board state of chosen move
+	makeMove = [0,0,0,0] #[fromRow,fromCol,toRow,toCol]
+	noMove = True #make sure one possible move gets chosen if no move gets chosen by minimax
+	checked = False #true if ai king is checked
 
+
+	#check if player is checked
+	if(kingChecked(ChessGrid,turn)): 
+		checked = True		
 
 	#if king not checked
 	for i in range(0,8):
 
 		for j in range(0,8):
 
-			if(ChessGrid[i][j][0] == turn ): #1 - AI .. 2 - human
+			if(ChessGrid[i][j][0] == turn ): # 1- human(white) , 2 - AI(black)
 				
 				#get list of moves the piece can make
-				print("ai.py - Getting moves for "+globals.ChessGrid[i][j] + " location : "+str(i)+","+str(j))
+				# print("ai.py - Getting moves for "+globals.ChessGrid[i][j] + " location : "+str(i)+","+str(j))
 				moves = getAllMoves(ChessGrid,i,j,ChessGrid[i][j][1],ChessGrid[i][j][0])
-				print("moves are :")
-				print(moves)
-				print()
+				# print("moves are :")
+				# print(moves)
+				# print()
 
 				#for every possible move
 				for move in moves:
 					
 
 					#copy grid status to new list
-					print("playing move "+str(move))
+					# print("playing move "+str(move))
 					NewChessGrid = deepcopy(ChessGrid)
 					NewChessGrid[i][j] = "0"
 					NewChessGrid[move[0]][move[1]] = ChessGrid[i][j]
 					#print("New Grid :")
 					#PrintGrid(NewChessGrid)
+
+					#if ai was previously checked and after the move is still checked then don't allow the move
+					if(checked and kingChecked(NewChessGrid,turn)):
+						continue;
 
 					#perform MINIMAX/ALPHA-BETA
 					moveHeuristic = AI_Move(NewChessGrid)
@@ -70,7 +79,8 @@ def AI_Move(GameGrid):
 					#reduce depth value when returning from recursion
 					AI_Move.depth -= 1
 
-					print("back checking "+ChessGrid[i][j] + " depth = "+str(AI_Move.depth))
+					# print("back checking "+ChessGrid[i][j] + " depth = "+str(AI_Move.depth))
+					
 					#if heuristic is same chose generated move by a chance
 					if(moveHeuristic == heuristic):
 						xyz = randint(1,100)
@@ -171,22 +181,29 @@ def getAllMoves(ChessGrid,row,col,piece,color):
 		#separate if else for black and white since black pawns will only go downwards
 		#and white pawns only upwards
 		if(color == "2"):  #black
+			#initial 2 step
+			if( row == 1 and ChessGrid[row+2][col] == "0"):
+				moves.append([row+2,col])
 			#moving a step
 			if( ChessGrid[row+1][col] == "0" ):
 				moves.append([row+1,col])
 			#attacking
 			if( row+1 < 8 and col + 1 < 8 and ChessGrid[row+1][col+1][0] == "1" ):
 				moves.append([row+1,col+1])
-			if( row+1 < 8 and col - 1 > 0 and ChessGrid[row+1][col-1][0] == "1" ):
+			if( row+1 < 8 and col - 1 >= 0 and ChessGrid[row+1][col-1][0] == "1" ):
 				moves.append([row+1,col-1])
+
 		else: #white
+			#initial 2 step
+			if( row == 6 and ChessGrid[row-2][col] == "0"):
+				moves.append([row-2,col])
 			#moving a step
 			if( ChessGrid[row-1][col] == "0" ):
 				moves.append([row-1,col])
 			#attacking
-			if( row+1 < 8 and col + 1 < 8 and ChessGrid[row-1][col+1][0] == "2" ):
+			if( row-1 >= 0 and col + 1 < 8 and ChessGrid[row-1][col+1][0] == "2" ):
 				moves.append([row-1,col+1])
-			if( row+1 < 8 and col - 1 > 0 and ChessGrid[row-1][col-1][0] == "2" ):
+			if( row-1 >= 0 and col - 1 >= 0 and ChessGrid[row-1][col-1][0] == "2" ):
 				moves.append([row-1,col-1])
 
 
@@ -363,13 +380,42 @@ def getAllMoves(ChessGrid,row,col,piece,color):
 		if(CheckCell(ChessGrid,row,col+1,color)):
 			moves.append([row,col+1])
 
-		if(CheckCell(ChessGrid,row+1,col-1,color)):
-			moves.append([row+1,col-1])
+		if(CheckCell(ChessGrid,row-1,col-1,color)):
+			moves.append([row-1,col-1])
 
-		if(CheckCell(ChessGrid,row+1,col,color)):
-			moves.append([row+1,col])
+		if(CheckCell(ChessGrid,row-1,col,color)):
+			moves.append([row-1,col])
 
-		if(CheckCell(ChessGrid,row+1,col+1,color)):
-			moves.append([row+1,col+1])
+		if(CheckCell(ChessGrid,row-1,col+1,color)):
+			moves.append([row-1,col+1])
 
+	# print(moves)
 	return moves
+
+
+def kingChecked(ChessGrid,color):
+
+	kingRow  = None
+	kingCol = None
+	# print('color '+color)
+	for row in range(0,8) :
+		for col in range(0,8):
+
+			if(ChessGrid[row][col][0] == color and ChessGrid[row][col][1] == '6'):
+				kingRow = row
+				kingCol = col
+
+
+	for row in range(0,8) :
+		for col in range(0,8):
+
+			if(ChessGrid[row][col][0] != color and ChessGrid[row][col] != '0'):
+
+				moves = getAllMoves(ChessGrid,row,col,ChessGrid[row][col][1],ChessGrid[row][col][0])
+
+				if([kingRow,kingCol] in moves):
+					return True
+
+	return False
+
+

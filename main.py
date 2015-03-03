@@ -6,7 +6,6 @@ import ai
 from random import randint
 from copy import deepcopy
 
-
 #uncomment for logging to file
 #old_stdout = sys.stdout
 #log_file = open("message.log","w")
@@ -153,36 +152,77 @@ class MainWindow(Frame):
 	#confirm valid move and move piece from (PieceSelectedRow,PieceSelectedColumn) -> (toRow,toColumn)
 	def MovePiece(self,toRow,toColumn,fromRow,fromCol,Piece):
 
-		print("move "+Piece+" from "+str(globals.PieceSelectedRow)+","+str(globals.PieceSelectedColumn)+" to "+str(toRow)+","+str(toColumn))
+		print("move "+Piece+" from "+str(fromRow)+","+str(fromCol)+" to "+str(toRow)+","+str(toColumn))
 		
+
+		#if king is checked or a move is made
+		#check if the selected move to make will bring the king out of check
+		#if yes make the move
+		#else dont
+		if(ai.kingChecked(globals.ChessGrid,Piece[0])):
+
+			#create temporary board to perform move
+			newChessGrid = deepcopy(globals.ChessGrid)
+			moves = ai.getAllMoves(newChessGrid,fromRow,fromCol,Piece[1],Piece[0])
+			
+			#if move is valid perform the move on temporary board
+			if([toRow,toColumn] in moves):
+					newChessGrid[toRow][toColumn] = newChessGrid[fromRow][fromCol]
+					newChessGrid[fromRow][fromCol] = "0"
+			else:
+				print("move is invalid")
+				globals.PieceSelected = False
+				return
+
+			#if the king is still checked then do not allow this move
+			if(ai.kingChecked(newChessGrid,Piece[0])):
+				print("king checked cant make this move")
+				globals.PieceSelected = False
+				return
+
+
+
+		#get all possible moves of the piece
+		moves = ai.getAllMoves(globals.ChessGrid,fromRow,fromCol,Piece[1],Piece[0])
 		#if move is valid create new image at new location
-		if(validmove.validMove(globals.PieceSelectedRow,globals.PieceSelectedColumn,toRow,toColumn,Piece)):
-			self.CreateImage(toRow,toColumn,globals.PieceSelectedRow,globals.PieceSelectedColumn,Piece)
+		if([toRow,toColumn] in moves):
+			globals.ChessGrid[toRow][toColumn] = globals.ChessGrid[fromRow][fromCol]
+			globals.ChessGrid[fromRow][fromCol] = "0"
+			self.CreateImage(toRow,toColumn,globals.PieceSelectedRow,globals.PieceSelectedColumn,Piece)		
 		else:
 			print("invalid move")
+			globals.PieceSelected = False
 			return
 
 		#change turn of player 1 to 2 or to AI 
 		if(globals.TURN == 1):
 			
 			if(globals.AI_on):
+
 				moves = [] #stores available moves for a piece
 				heuristic = 0 #stores heuristic of chosen move
 				makeMove = [0,0,0,0] #[fromRow,fromCol,toRow,toCol]
-				noMove = True #reason to use forgotten need time to remember
+				noMove = True #make sure one possible move gets chosen if no move gets chosen by minimax
+				checked = False #true if ai king is checked
+
+				if(ai.kingChecked(globals.ChessGrid,"2")): #2 => black (AI)
+					checked = True
 
 				for i in range(0,8):
 					for j in range(0,8):
 
+						
+
 						#if piece belongs to AI ( AI pieces are black)
 						if(globals.ChessGrid[i][j][0] == "2"):
+
 
 							#get moves of the piece
 							print("main.py - Getting moves for "+globals.ChessGrid[i][j]+' at '+str(i)+','+str(j))
 							moves = ai.getAllMoves(globals.ChessGrid,i,j,globals.ChessGrid[i][j][1],globals.ChessGrid[i][j][0])
 							print("moves are :")
 							print(moves)
-							print()
+							# print()
 
 							#for every possible move
 							for move in moves:
@@ -192,8 +232,12 @@ class MainWindow(Frame):
 								NewChessGrid = deepcopy(globals.ChessGrid)
 
 								#perform the move
-								NewChessGrid[move[0]][move[1]] = globals.ChessGrid[i][j]
+								NewChessGrid[move[0]][move[1]] = NewChessGrid[i][j]
 								NewChessGrid[i][j] = "0"
+
+								#if ai was previously checked and after the move is still checked then don't allow the move
+								if(checked and ai.kingChecked(NewChessGrid,"2")):
+									continue;
 
 								#perform MINIMAX/ALPHA-BETA
 								moveHeuristic = ai.AI_Move(NewChessGrid)
@@ -202,22 +246,27 @@ class MainWindow(Frame):
 								#set the static variable controlling depth of recursion of minimax to 0
 								ai.AI_Move.depth = 0
 
-								#if heuristic is same as previous then chose generated move by a chance
+								#if heuristic is same as previous then chose generated move by 50% chance
 								if(moveHeuristic == heuristic):
 									randomInt = randint(1,100)
 									if(randomInt > 50):
-										moveHeuristic = heuristic
+										print("MOVE CHOSEN by "+str(randomInt))
 										makeMove = [i,j,move[0],move[1]]
 
 								#if better heuristic from move choose this move
 								if(moveHeuristic < heuristic or (move == [0,0,0,0])):
-									moveHeuristic = heuristic
+									print("MOVE CHOSEN")
+									heuristic = moveHeuristic
 									makeMove = [i,j,move[0],move[1]]
+
 								if(noMove):
-									moveHeuristic = heuristic
+									print("MOVE CHOSEN")
+									heuristic = moveHeuristic
 									makeMove = [i,j,move[0],move[1]]
 									noMove = False
 
+				if(checked):
+					print("GAME OVER")
 				globals.ChessGrid[makeMove[2]][makeMove[3]] = globals.ChessGrid[makeMove[0]][makeMove[1]]
 				globals.ChessGrid[makeMove[0]][makeMove[1]] = "0"
 				#globals.PrintGrid(globals.ChessGrid)
@@ -228,7 +277,7 @@ class MainWindow(Frame):
 		else:
 			globals.TURN = 1
 
-		PieceSelected = False
+		globals.PieceSelected = False
 
 	def CreateImage(self,toRow,toColumn,fromRow,fromColumn,Piece):
 		print('=================================================')
