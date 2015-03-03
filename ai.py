@@ -150,6 +150,11 @@ def getHeuristic(ChessGrid):
 				else:
 					blackVal += 6
 
+	if(kingChecked(ChessGrid,"1")):
+		blackVal += 100;
+
+	if(kingChecked(ChessGrid,"2")):
+		whiteVal += 100;
 
 	return whiteVal - blackVal
 
