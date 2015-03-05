@@ -1,7 +1,6 @@
 
 from Tkinter import *
 import globals
-import validmove
 import ai
 from random import randint
 from copy import deepcopy
@@ -200,10 +199,11 @@ class MainWindow(Frame):
 			if(globals.AI_on):
 
 				moves = [] #stores available moves for a piece
-				heuristic = 0 #stores heuristic of chosen move
+				heuristic = 10000 #stores heuristic of chosen move
 				makeMove = [0,0,0,0] #[fromRow,fromCol,toRow,toCol]
 				noMove = True #make sure one possible move gets chosen if no move gets chosen by minimax
 				checked = False #true if ai king is checked
+				moveHeuristic = None #stores heuristic of move made
 
 				if(ai.kingChecked(globals.ChessGrid,"2")): #2 => black (AI)
 					checked = True
@@ -236,20 +236,21 @@ class MainWindow(Frame):
 								NewChessGrid[i][j] = "0"
 
 								#if ai was previously checked and after the move is still checked then don't allow the move
-								if(checked and ai.kingChecked(NewChessGrid,"2")):
+								if(ai.kingChecked(NewChessGrid,"2")):
 									continue;
 
 								#perform MINIMAX/ALPHA-BETA
-								moveHeuristic = ai.AI_Move(NewChessGrid)
+								#send chesssgrid and alpha/beta value
+								moveHeuristic = ai.AI_Move(NewChessGrid,moveHeuristic)
 								print("back to main.py moveHeuristic = "+str(moveHeuristic) + " checking "+globals.ChessGrid[i][j])
 
 								#set the static variable controlling depth of recursion of minimax to 0
 								ai.AI_Move.depth = 0
 
-								#if heuristic is same as previous then chose generated move by 50% chance
+								#if heuristic is same as previous then chose generated move by choosenRandomMoveChance% chance
 								if(moveHeuristic == heuristic):
 									randomInt = randint(1,100)
-									if(randomInt > 50):
+									if(randomInt > globals.chooseRandomMoveChance):
 										print("MOVE CHOSEN by "+str(randomInt))
 										makeMove = [i,j,move[0],move[1]]
 
@@ -259,7 +260,9 @@ class MainWindow(Frame):
 									heuristic = moveHeuristic
 									makeMove = [i,j,move[0],move[1]]
 
-								if(noMove):
+								#chose this move if no move has been chosen till now and the king is not checked
+								#precautionary block in case the above code somehow does not pick a move which shouldn't happen hopefully
+								if(noMove and (not checked)):
 									print("MOVE CHOSEN")
 									heuristic = moveHeuristic
 									makeMove = [i,j,move[0],move[1]]

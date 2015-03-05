@@ -12,6 +12,7 @@ TURN = None
 AI_on = None
 MAX_DEPTH = None #max minimax depth
 KingChecked = None
+chooseRandomMoveChance = None
 #ChessGrid values
 # 1_ - white , 2_ - black
 # _1 - pawn , _2 - rook , _3 - bishop , _4 - knight , _5 - queen , _6 - king
@@ -23,6 +24,7 @@ def init():
 	global root,ImageDict,ChessGrid,ChessPieces,PieceSelected
 	global PieceSelectedRow,PieceSelectedColumn,TURN,AI_on
 	global MAX_DEPTH
+	global chooseRandomMoveChance
 	AI_on = True
 	root = None
 	ImageDict = {}
@@ -32,11 +34,10 @@ def init():
 	PieceSelectedRow = -1
 	PieceSelectedColumn = -1
 	TURN = 1 # 1 - white , 2 - black
-	MAX_DEPTH = 3
+	MAX_DEPTH = 5
+	chooseRandomMoveChance = 50
 
 
 def PrintGrid(Grid):
 	for i in range(0,8):
 		print(Grid[i])
-		
-

@@ -1,9 +1,8 @@
 import globals
-import validmove
 from random import randint
 from copy import deepcopy
 
-def AI_Move(GameGrid):
+def AI_Move(GameGrid,ABVal):
 
 	ChessGrid = deepcopy(GameGrid)
 	
@@ -33,7 +32,12 @@ def AI_Move(GameGrid):
 
 
 	moves = [] #stores available moves for a piece
-	heuristic = getHeuristic(ChessGrid) #stores heuristic of board state of chosen move
+	heuristic = 0 #stores heuristic of board state of chosen move
+	if(turn == "2"):
+		heuristic = 10000;
+	else:
+		heuristic = -10000;
+	#heuristic = getHeuristic(ChessGrid) 
 	makeMove = [0,0,0,0] #[fromRow,fromCol,toRow,toCol]
 	noMove = True #make sure one possible move gets chosen if no move gets chosen by minimax
 	checked = False #true if ai king is checked
@@ -74,18 +78,27 @@ def AI_Move(GameGrid):
 						continue;
 
 					#perform MINIMAX/ALPHA-BETA
-					moveHeuristic = AI_Move(NewChessGrid)
+					moveHeuristic = AI_Move(NewChessGrid,ABVal)
+
+					#alpha beta pruning
+					if(turn == "2"): #AI's turn
+						if(moveHeuristic <= ABVal):
+							return min(moveHeuristic,heuristic)
+					if(turn == "1"): #Human's turn
+						if(moveHeuristic >= ABVal):
+							return max(moveHeuristic,heuristic)
 
 					#reduce depth value when returning from recursion
 					AI_Move.depth -= 1
 
 					# print("back checking "+ChessGrid[i][j] + " depth = "+str(AI_Move.depth))
 					
-					#if heuristic is same chose generated move by a chance
+					#if heuristic is same chose generated move by a chance of chooseRandomMoveChance%
 					if(moveHeuristic == heuristic):
-						xyz = randint(1,100)
-						if(xyz > 50):
-							moveHeuristic = heuristic
+						randomInt = randint(1,100)
+						if(randomInt > globals.chooseRandomMoveChance):
+							heuristic = moveHeuristic 
+							ABVal = heuristic
 							makeMove = [i,j,move[0],move[1]]
 
 					#if better heuristic from move choose this move
@@ -94,12 +107,18 @@ def AI_Move(GameGrid):
 					#human will choose a lower heuristic value (MIN)
 					if(moveHeuristic > heuristic and turn == "1"):
 						heuristic = moveHeuristic 
+						ABVal = heuristic
 					if(moveHeuristic < heuristic and turn == "2"):
 						heuristic = moveHeuristic 
+						ABVal = heuristic
 
 	return heuristic
 
 
+def min(a,b):
+	if(a < b):
+		return a
+	return b
 
 #calculate and return heuristic of the board
 def getHeuristic(ChessGrid):
