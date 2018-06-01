@@ -1,5 +1,5 @@
 
-from Tkinter import *
+from tkinter import *
 import globals
 import ai
 from random import randint
@@ -136,6 +136,7 @@ class MainWindow(Frame):
 	#check if selected cell has a valid piece in it according to player and store row and column indices
 	def CellSelect(self,row,column):
 		
+		#if(white's turn AND piece is white AND piece is valid)
 		if(globals.TURN == 1 and globals.ChessGrid[row][column][0] == '1' and globals.ChessGrid[row][column] in globals.ChessPieces):
 			globals.PieceSelected = True
 			globals.PieceSelectedRow = row
@@ -241,6 +242,7 @@ class MainWindow(Frame):
 
 								#perform MINIMAX/ALPHA-BETA
 								#send chesssgrid and alpha/beta value
+								moveHeuristic = -10000
 								moveHeuristic = ai.AI_Move(NewChessGrid,moveHeuristic)
 								print("back to main.py moveHeuristic = "+str(moveHeuristic) + " checking "+globals.ChessGrid[i][j])
 

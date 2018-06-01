@@ -34,9 +34,9 @@ def AI_Move(GameGrid,ABVal):
 	moves = [] #stores available moves for a piece
 	heuristic = 0 #stores heuristic of board state of chosen move
 	if(turn == "2"):
-		heuristic = 10000;
+		heuristic = 10000
 	else:
-		heuristic = -10000;
+		heuristic = -10000
 	#heuristic = getHeuristic(ChessGrid) 
 	makeMove = [0,0,0,0] #[fromRow,fromCol,toRow,toCol]
 	noMove = True #make sure one possible move gets chosen if no move gets chosen by minimax
@@ -170,10 +170,10 @@ def getHeuristic(ChessGrid):
 					blackVal += 6
 
 	if(kingChecked(ChessGrid,"1")):
-		blackVal += 100;
+		blackVal += 100
 
 	if(kingChecked(ChessGrid,"2")):
-		whiteVal += 100;
+		whiteVal += 100
 
 	return whiteVal - blackVal
 
@@ -425,7 +425,7 @@ def kingChecked(ChessGrid,color):
 	for row in range(0,8) :
 		for col in range(0,8):
 
-			if(ChessGrid[row][col][0] == color and ChessGrid[row][col][1] == '6'):
+			if(ChessGrid[row][col][0] == color and ChessGrid[row][col][1] == '6'): #locate black/white king's position
 				kingRow = row
 				kingCol = col
 
